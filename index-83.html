@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>José Miguel - 1 Ano</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #1a0f05;
+    overflow: hidden;
+    font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+    user-select: none; -webkit-user-select: none;
+  }
+
+  /* Páginas */
+  .page { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: #1a0f05; }
+  .page.active { display: flex; }
+
+  /* Palco com proporção 9:16 (imagens) */
+  .stage {
+    position: relative;
+    height: 100dvh;
+    width: min(100vw, calc(100dvh * 941 / 1672));
+    max-height: calc(100vw * 1672 / 941);
+  }
+  .stage img.bg { width: 100%; height: 100%; display: block; object-fit: fill; pointer-events: none; -webkit-user-drag: none; }
+
+  /* Página 1 */
+  #page-primeira { cursor: pointer; }
+
+  /* Vídeo */
+  #page-video { background: #000; }
+  #page-video video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+  .btn-skip {
+    position: fixed;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
+    transform: translateX(-50%);
+    padding: 10px 22px;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: rgba(255,255,255,.85);
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.30);
+    border-radius: 999px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    cursor: pointer;
+    transition: background .25s, color .25s;
+    z-index: 5;
+  }
+  .btn-skip:hover { background: rgba(255,255,255,.22); color: #fff; }
+
+  /* Botão voltar */
+  .btn-back {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + 14px);
+    left: 14px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #4a2a0c;
+    background: rgba(255, 238, 200, .88);
+    border: 2px solid #8a5a2b;
+    border-radius: 999px;
+    box-shadow: 0 3px 10px rgba(0,0,0,.35);
+    cursor: pointer;
+    z-index: 5;
+  }
+  .btn-back:hover { background: #fff3d6; }
+
+  /* Áreas clicáveis (posições em % da imagem interativo.jpg) */
+  .hot {
+    position: absolute;
+    left: 50%;
+    width: 40.5%;
+    display: block;
+    cursor: pointer;
+    border-radius: 999px;
+    background: transparent;
+    border: 0;
+    outline: none;
+  }
+  .hot:active { background: rgba(255,255,255,.15); }
+  #hot-rsvp { top: 74.5%; height: 6.6%; }
+  #hot-local { top: 82.0%; height: 6.2%; }
+  #hot-presentes { top: 89.0%; height: 6.2%; }
+
+  /* Patinhas */
+  .paw {
+    position: fixed;
+    width: 54px; height: 54px;
+    margin: -27px 0 0 -27px;
+    pointer-events: none;
+    z-index: 9999;
+    animation: paw 1s ease-out forwards;
+  }
+  @keyframes paw {
+    0%   { opacity: 0; transform: scale(.3) rotate(var(--r)); }
+    18%  { opacity: 1; transform: scale(1.1) rotate(var(--r)); }
+    35%  { transform: scale(1) rotate(var(--r)); }
+    100% { opacity: 0; transform: scale(1) translateY(-14px) rotate(var(--r)); }
+  }
+</style>
+</head>
+<body>
+
+<!-- 1. Primeira página -->
+<section class="page active" id="page-primeira">
+  <div class="stage"><img class="bg" src="primeira.jpg" alt="Clique para abrir o convite"></div>
+</section>
+
+<!-- 2. Vídeo -->
+<section class="page" id="page-video">
+  <video id="video" src="video.mp4" playsinline webkit-playsinline preload="auto"></video>
+  <button class="btn-skip" id="btn-skip" type="button">Clique aqui para pular introdução</button>
+</section>
+
+<!-- 3. Interativo -->
+<section class="page" id="page-interativo">
+  <div class="stage">
+    <img class="bg" src="interativo.jpg" alt="Convite José Miguel - 1 ano">
+    <button class="btn-back" id="back-interativo" type="button">← Voltar ao convite</button>
+    <a class="hot" id="hot-rsvp" href="https://wa.link/0ekees" target="_blank" rel="noopener" aria-label="Confirme sua presença"></a>
+    <a class="hot" id="hot-local" href="https://maps.app.goo.gl/Z5RtVc3X2ykUbsGe6" target="_blank" rel="noopener" aria-label="Localização"></a>
+    <button class="hot" id="hot-presentes" type="button" aria-label="Dicas de presentes"></button>
+  </div>
+</section>
+
+<!-- 4. Presentes -->
+<section class="page" id="page-presentes">
+  <div class="stage">
+    <img class="bg" src="presentes.jpg" alt="Sugestões de presente">
+    <button class="btn-back" id="back-presentes" type="button">← Voltar ao convite</button>
+  </div>
+</section>
+
+<script>
+(function () {
+  var pages = {
+    primeira: document.getElementById('page-primeira'),
+    video: document.getElementById('page-video'),
+    interativo: document.getElementById('page-interativo'),
+    presentes: document.getElementById('page-presentes')
+  };
+  var video = document.getElementById('video');
+
+  function show(name) {
+    for (var k in pages) pages[k].classList.toggle('active', k === name);
+    if (name !== 'video') video.pause();
+  }
+
+  function playVideo() {
+    show('video');
+    try { video.currentTime = 0; } catch (e) {}
+    var p = video.play();
+    if (p && p.catch) {
+      p.catch(function () {
+        // Se o navegador bloquear o som, toca sem áudio
+        video.muted = true;
+        video.play().catch(function () {});
+      });
+    }
+  }
+
+  // Página 1 -> vídeo
+  pages.primeira.addEventListener('click', playVideo);
+
+  // Vídeo: pular ou terminar -> interativo
+  document.getElementById('btn-skip').addEventListener('click', function () { show('interativo'); });
+  video.addEventListener('ended', function () { show('interativo'); });
+  video.addEventListener('error', function () { show('interativo'); });
+
+  // Interativo
+  document.getElementById('back-interativo').addEventListener('click', playVideo);
+  document.getElementById('hot-presentes').addEventListener('click', function () { show('presentes'); });
+
+  // Presentes -> interativo
+  document.getElementById('back-presentes').addEventListener('click', function () { show('interativo'); });
+
+  // Pré-carrega imagens
+  ['interativo.jpg', 'presentes.jpg'].forEach(function (src) { new Image().src = src; });
+
+  // Patinha de leão a cada toque/clique
+  var PAW = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+    '<g fill="#d9952f" stroke="#6b3d12" stroke-width="3.5" stroke-linejoin="round">' +
+    '<ellipse cx="50" cy="66" rx="24" ry="20"/>' +
+    '<ellipse cx="22" cy="42" rx="9.5" ry="12" transform="rotate(-22 22 42)"/>' +
+    '<ellipse cx="39" cy="26" rx="9.5" ry="12.5" transform="rotate(-8 39 26)"/>' +
+    '<ellipse cx="61" cy="26" rx="9.5" ry="12.5" transform="rotate(8 61 26)"/>' +
+    '<ellipse cx="78" cy="42" rx="9.5" ry="12" transform="rotate(22 78 42)"/>' +
+    '</g>' +
+    '<ellipse cx="50" cy="68" rx="12" ry="9" fill="#8a4d17" opacity=".35"/></svg>';
+
+  function spawnPaw(x, y) {
+    var el = document.createElement('div');
+    el.className = 'paw';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.setProperty('--r', (Math.random() * 50 - 25).toFixed(0) + 'deg');
+    el.innerHTML = PAW;
+    document.body.appendChild(el);
+    setTimeout(function () { el.remove(); }, 1050);
+  }
+
+  document.addEventListener('pointerdown', function (e) {
+    spawnPaw(e.clientX, e.clientY);
+  }, true);
+})();
+</script>
+</body>
+</html>
